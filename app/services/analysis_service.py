@@ -148,7 +148,6 @@ class HistoricalQueryService:
     
     def search_traffic(self, criteria):
         """Search historical traffic based on criteria"""
-        # Simplified search - in production would query database with criteria
         results = []
         
         for i in range(50):

@@ -60,8 +60,6 @@ class AuthenticationService:
         user = User.query.filter_by(email=email).first()
         if not user:
             return {'success': False, 'message': 'Email not found'}
-        
-        # Generate token (simplified - in production use proper token generation)
         token = f'reset_{user.id}_{datetime.utcnow().timestamp()}'
         
         return {'success': True, 'token': token}

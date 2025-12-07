@@ -299,8 +299,6 @@ class CaptureService:
         """Background thread to generate packet data"""
         protocols = ['TCP', 'UDP', 'ICMP', 'HTTP', 'HTTPS', 'DNS', 'SSH', 'FTP']
         flags_options = ['SYN', 'ACK', 'FIN', 'PSH', 'RST', 'SYN,ACK', 'PSH,ACK', 'FIN,ACK']
-        
-        # Common source/destination IPs for more realistic traffic
         source_ips = [
             '192.168.1.100', '192.168.1.101', '192.168.1.102', '10.0.0.50',
             '172.16.0.20', '192.168.0.150', '10.1.1.30'

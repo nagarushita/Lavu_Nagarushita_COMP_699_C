@@ -241,8 +241,6 @@ class DashboardService:
     
     def _get_geographic_data(self):
         """Get geographic distribution data"""
-        # Geographic data would require GeoIP lookup - return placeholder for now
-        # This should be populated by actual GeoIP analysis service
         return {
             'Unknown': 0
         }

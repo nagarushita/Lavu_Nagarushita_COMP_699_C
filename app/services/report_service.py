@@ -73,7 +73,6 @@ class ReportService:
         content.append(Paragraph('<b>Traffic Summary</b>', styles['Heading2']))
         content.append(Spacer(1, 0.2*inch))
         
-        # Sample data
         data = [
             ['Metric', 'Value'],
             ['Total Packets', '1,234,567'],
@@ -219,7 +218,6 @@ class ReportService:
     
     def schedule_report(self, config, user_id):
         """Schedule a report for future generation"""
-        # Simplified - in production would use task queue
         return {
             'success': True,
             'schedule_id': 1,

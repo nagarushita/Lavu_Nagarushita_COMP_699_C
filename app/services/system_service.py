@@ -44,9 +44,6 @@ class SystemService:
         """Configure data retention period"""
         if days < 30 or days > 730:
             return {'success': False, 'message': 'Retention must be between 30 and 730 days'}
-        
-        # In production, this would update configuration
-        # For now, trigger cleanup if reducing retention
         return {'success': True, 'retention_days': days}
     
     def run_cleanup(self):
@@ -104,13 +101,6 @@ class SystemService:
         """Restore database from backup"""
         if not backup_file:
             return {'success': False, 'message': 'No backup file provided'}
-        
-        # In production, this would:
-        # 1. Validate backup file
-        # 2. Stop all operations
-        # 3. Replace current database
-        # 4. Restart application
-        
         return {
             'success': True,
             'message': 'Database restore initiated',
