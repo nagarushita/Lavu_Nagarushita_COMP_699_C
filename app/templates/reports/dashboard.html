@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - Network Monitor{% endblock %}
+
+{% block breadcrumbs %}
+<svg class="w-4 h-4 text-gray-400 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-gray-900 font-medium">Reports</span>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-gray-900 mb-2">Reports Dashboard</h2>
+    <p class="text-gray-600">Generate comprehensive network monitoring and security reports</p>
+</div>
+
+<!-- Quick Stats -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="stat-card primary">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Total Reports</p>
+                <p class="text-3xl font-bold text-gray-900">24</p>
+            </div>
+            <div class="p-3 bg-primary-100 rounded-lg">
+                <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">This Month</p>
+                <p class="text-3xl font-bold text-gray-900">8</p>
+            </div>
+            <div class="p-3 bg-success-100 rounded-lg">
+                <svg class="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card info">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Scheduled</p>
+                <p class="text-3xl font-bold text-gray-900">3</p>
+            </div>
+            <div class="p-3 bg-info-100 rounded-lg">
+                <svg class="w-6 h-6 text-info-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Avg Size</p>
+                <p class="text-3xl font-bold text-gray-900">2.4MB</p>
+            </div>
+            <div class="p-3 bg-warning-100 rounded-lg">
+                <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Templates -->
+<div class="mb-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-4">Report Templates</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="{{ url_for('reports.generate_form') }}" class="card group hover:border-primary-300 transition-all duration-300">
+            <div class="flex items-start space-x-4">
+                <div class="p-3 bg-primary-100 rounded-lg group-hover:bg-primary-200 transition-colors">
+                    <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-semibold text-gray-900 mb-1">Traffic Summary</h4>
+                    <p class="text-sm text-gray-600 mb-3">Comprehensive traffic analysis with bandwidth, packets, and protocol breakdowns</p>
+                    <span class="text-xs text-primary-600 font-medium">Generate Report →</span>
+                </div>
+            </div>
+        </a>
+        <a href="{{ url_for('reports.generate_form') }}" class="card group hover:border-danger-300 transition-all duration-300">
+            <div class="flex items-start space-x-4">
+                <div class="p-3 bg-danger-100 rounded-lg group-hover:bg-danger-200 transition-colors">
+                    <svg class="w-6 h-6 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-semibold text-gray-900 mb-1">Security Report</h4>
+                    <p class="text-sm text-gray-600 mb-3">Security incidents, alerts, anomalies, and threat analysis overview</p>
+                    <span class="text-xs text-danger-600 font-medium">Generate Report →</span>
+                </div>
+            </div>
+        </a>
+        <a href="{{ url_for('reports.generate_form') }}" class="card group hover:border-success-300 transition-all duration-300">
+            <div class="flex items-start space-x-4">
+                <div class="p-3 bg-success-100 rounded-lg group-hover:bg-success-200 transition-colors">
+                    <svg class="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-semibold text-gray-900 mb-1">Performance Report</h4>
+                    <p class="text-sm text-gray-600 mb-3">Network performance metrics including latency, throughput, and uptime</p>
+                    <span class="text-xs text-success-600 font-medium">Generate Report →</span>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<!-- Recent Reports -->
+<div class="card">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Recent Reports</h3>
+        <button class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+            + New Report
+        </button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b bg-gray-50">
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Report Name</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Type</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Generated</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Generated By</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Format</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Size</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="p-4">
+                        <div class="font-medium text-gray-900">Weekly Traffic Analysis</div>
+                        <div class="text-xs text-gray-500">Dec 1-7, 2025</div>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 bg-primary-100 text-primary-700 rounded text-xs font-medium">Traffic</span>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-sm text-gray-900">2025-12-07</div>
+                        <div class="text-xs text-gray-500">10:30 AM</div>
+                    </td>
+                    <td class="p-4 text-gray-600">Admin</td>
+                    <td class="p-4">
+                        <span class="flex items-center space-x-1 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-danger-500" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                            <span>PDF</span>
+                        </span>
+                    </td>
+                    <td class="p-4 text-sm text-gray-600">2.8 MB</td>
+                    <td class="p-4">
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-xs bg-primary-100 text-primary-700 hover:bg-primary-200 rounded transition-colors">Download</button>
+                            <button class="px-3 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 rounded transition-colors">View</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="p-4">
+                        <div class="font-medium text-gray-900">Security Incident Report</div>
+                        <div class="text-xs text-gray-500">November 2025</div>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 bg-danger-100 text-danger-700 rounded text-xs font-medium">Security</span>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-sm text-gray-900">2025-12-01</div>
+                        <div class="text-xs text-gray-500">02:15 PM</div>
+                    </td>
+                    <td class="p-4 text-gray-600">Analyst1</td>
+                    <td class="p-4">
+                        <span class="flex items-center space-x-1 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-danger-500" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                            <span>PDF</span>
+                        </span>
+                    </td>
+                    <td class="p-4 text-sm text-gray-600">1.5 MB</td>
+                    <td class="p-4">
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-xs bg-primary-100 text-primary-700 hover:bg-primary-200 rounded transition-colors">Download</button>
+                            <button class="px-3 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 rounded transition-colors">View</button>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="p-4">
+                        <div class="font-medium text-gray-900">Network Performance Q4</div>
+                        <div class="text-xs text-gray-500">Oct-Dec 2025</div>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 bg-success-100 text-success-700 rounded text-xs font-medium">Performance</span>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-sm text-gray-900">2025-11-28</div>
+                        <div class="text-xs text-gray-500">04:45 PM</div>
+                    </td>
+                    <td class="p-4 text-gray-600">Admin</td>
+                    <td class="p-4">
+                        <span class="flex items-center space-x-1 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-success-500" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"></path></svg>
+                            <span>CSV</span>
+                        </span>
+                    </td>
+                    <td class="p-4 text-sm text-gray-600">3.2 MB</td>
+                    <td class="p-4">
+                        <div class="flex space-x-2">
+                            <button class="px-3 py-1 text-xs bg-primary-100 text-primary-700 hover:bg-primary-200 rounded transition-colors">Download</button>
+                            <button class="px-3 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 rounded transition-colors">View</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

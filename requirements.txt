@@ -1,0 +1,13 @@
+flask
+flask-sqlalchemy
+flask-login
+flask-socketio
+flask-wtf
+scapy
+python-dotenv
+werkzeug
+email-validator
+reportlab
+pyotp
+eventlet
+psutil

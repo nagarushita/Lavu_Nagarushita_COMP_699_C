@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Historical Analysis - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold">Historical Traffic Search</h2>
+</div>
+
+<div class="bg-white p-6 rounded mb-6">
+    <h3 class="text-lg font-bold mb-4">Search Builder</h3>
+    <div id="criteria-container">
+        <div class="flex space-x-2 mb-2">
+            <select class="px-3 py-2 border rounded">
+                <option>Source IP</option>
+                <option>Destination IP</option>
+                <option>Protocol</option>
+                <option>Port</option>
+            </select>
+            <select class="px-3 py-2 border rounded">
+                <option>Equals</option>
+                <option>Contains</option>
+                <option>Greater than</option>
+                <option>Less than</option>
+            </select>
+            <input type="text" class="px-3 py-2 border rounded flex-1" placeholder="Value">
+        </div>
+    </div>
+    <div class="mt-4">
+        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Search</button>
+    </div>
+</div>
+
+<div class="bg-white p-6 rounded">
+    <h3 class="text-lg font-bold mb-4">Results</h3>
+    <div class="text-gray-600">Run a search to see results</div>
+</div>
+{% endblock %}

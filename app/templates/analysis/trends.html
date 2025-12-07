@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Trends - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold">Traffic Trends</h2>
+</div>
+
+<div class="bg-white p-6 rounded mb-6">
+    <div class="flex space-x-4">
+        <select id="metric-selector" class="px-3 py-2 border rounded">
+            <option>Bandwidth</option>
+            <option>Packet Rate</option>
+            <option>Connections</option>
+        </select>
+        <select id="range-selector" class="px-3 py-2 border rounded">
+            <option>Last 7 Days</option>
+            <option>Last 30 Days</option>
+            <option>Last 90 Days</option>
+        </select>
+    </div>
+</div>
+
+<div class="bg-white p-6 rounded">
+    <h3 class="text-lg font-bold mb-4">Trend Analysis</h3>
+    <canvas id="trend-chart"></canvas>
+</div>
+{% endblock %}

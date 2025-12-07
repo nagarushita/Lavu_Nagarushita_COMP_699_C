@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Admin - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold">System Administration</h2>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <div class="bg-white p-6 rounded">
+        <div class="text-sm text-gray-600 mb-2">CPU Usage</div>
+        <div class="text-3xl font-bold">{{ metrics.cpu_percent|round(1) }}%</div>
+    </div>
+    <div class="bg-white p-6 rounded">
+        <div class="text-sm text-gray-600 mb-2">Memory</div>
+        <div class="text-3xl font-bold">{{ metrics.memory_percent|round(1) }}%</div>
+    </div>
+    <div class="bg-white p-6 rounded">
+        <div class="text-sm text-gray-600 mb-2">Disk Usage</div>
+        <div class="text-3xl font-bold">{{ metrics.disk_percent|round(1) }}%</div>
+    </div>
+    <div class="bg-white p-6 rounded">
+        <div class="text-sm text-gray-600 mb-2">DB Size</div>
+        <div class="text-3xl font-bold">{{ metrics.db_size_mb|round(1) }} MB</div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Quick Stats</h3>
+        <div class="space-y-2 text-sm">
+            <div class="flex justify-between">
+                <span class="text-gray-600">Active Sessions:</span>
+                <span class="font-medium">{{ metrics.active_sessions }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-600">Packet Rate:</span>
+                <span class="font-medium">{{ metrics.packet_rate }} pps</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Quick Actions</h3>
+        <div class="space-y-2">
+            <a href="{{ url_for('admin.users') }}" 
+               class="block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">
+                Manage Users
+            </a>
+            <a href="{{ url_for('admin.system') }}" 
+               class="block px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-center">
+                System Settings
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

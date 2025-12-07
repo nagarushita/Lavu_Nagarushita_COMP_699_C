@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}DNS Analysis - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold">DNS Analysis</h2>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Query Volume</h3>
+        <canvas id="query-volume-chart"></canvas>
+    </div>
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Query Types</h3>
+        <canvas id="query-types-chart"></canvas>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Top Domains</h3>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left p-2">Domain</th>
+                    <th class="text-right p-2">Queries</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if data and data.top_domains %}
+                {% for domain in data.top_domains %}
+                <tr class="border-b">
+                    <td class="p-2">{{ domain.domain }}</td>
+                    <td class="text-right p-2">{{ domain.queries }}</td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">DNS Servers</h3>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left p-2">Server</th>
+                    <th class="text-right p-2">Queries</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if data and data.dns_servers %}
+                {% for server in data.dns_servers %}
+                <tr class="border-b">
+                    <td class="p-2">{{ server.server }}</td>
+                    <td class="text-right p-2">{{ server.queries }}</td>
+                </tr>
+                {% endfor %}
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

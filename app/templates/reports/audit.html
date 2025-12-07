@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold">Audit Log</h2>
+</div>
+
+<div class="bg-white p-4 rounded mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <select class="px-3 py-2 border rounded">
+            <option>All Users</option>
+        </select>
+        <select class="px-3 py-2 border rounded">
+            <option>All Actions</option>
+        </select>
+        <input type="date" class="px-3 py-2 border rounded">
+    </div>
+</div>
+
+<div class="bg-white rounded">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="border-b">
+                <th class="text-left p-4">Timestamp</th>
+                <th class="text-left p-4">User</th>
+                <th class="text-left p-4">Action</th>
+                <th class="text-left p-4">Resource</th>
+                <th class="text-left p-4">IP Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in audit_trail %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-4">{{ log.timestamp }}</td>
+                <td class="p-4">{{ log.user }}</td>
+                <td class="p-4">{{ log.action }}</td>
+                <td class="p-4">{{ log.resource_type }}</td>
+                <td class="p-4">{{ log.ip_address }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Interface Details - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold">{{ interface.display_name }}</h2>
+    <p class="text-gray-600">{{ interface.name }} - {{ interface.ip_address }}</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Current Stats</h3>
+        <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+                <span class="text-gray-600">Bandwidth:</span>
+                <span class="font-medium">{{ stats.bandwidth_mbps }} Mbps</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-600">Utilization:</span>
+                <span class="font-medium">{{ stats.bandwidth_percent }}%</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-600">Packet Rate:</span>
+                <span class="font-medium">{{ stats.packet_rate }} pps</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-600">Connections:</span>
+                <span class="font-medium">{{ stats.connections }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Configuration</h3>
+        <form method="POST" action="{{ url_for('monitoring.configure_interface', id=interface.id) }}">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Bandwidth Limit (Mbps)</label>
+                <input type="number" name="bandwidth_limit_mbps" value="{{ interface.bandwidth_limit_mbps }}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">IP Filter</label>
+                <input type="text" name="filter_ip" placeholder="192.168.1.0/24"
+                       class="w-full px-3 py-2 border border-gray-300 rounded">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Port Filter</label>
+                <input type="number" name="filter_port" placeholder="80"
+                       class="w-full px-3 py-2 border border-gray-300 rounded">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Protocol</label>
+                <select name="filter_protocol" class="w-full px-3 py-2 border border-gray-300 rounded">
+                    <option value="">All</option>
+                    <option value="TCP">TCP</option>
+                    <option value="UDP">UDP</option>
+                    <option value="ICMP">ICMP</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Save Configuration
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="bg-white p-6 rounded">
+    <h3 class="text-lg font-bold mb-4">Bandwidth Usage</h3>
+    <canvas id="bandwidth-chart"></canvas>
+</div>
+{% endblock %}

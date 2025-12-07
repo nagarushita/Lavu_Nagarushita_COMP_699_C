@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Network Monitor{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: { 50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a' },
+                        success: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' },
+                        warning: { 50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24', 500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f' },
+                        danger: { 50: '#fef2f2', 100: '#fee2e2', 200: '#fecaca', 300: '#fca5a5', 400: '#f87171', 500: '#ef4444', 600: '#dc2626', 700: '#b91c1c', 800: '#991b1b', 900: '#7f1d1d' },
+                        info: { 50: '#f0f9ff', 100: '#e0f2fe', 200: '#bae6fd', 300: '#7dd3fc', 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', 700: '#0369a1', 800: '#075985', 900: '#0c4a6e' }
+                    }
+                }
+            }
+        }
+    </script>
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-50">
+    <!-- Mobile menu toggle - only show when authenticated -->
+    {% if current_user.is_authenticated %}
+    <div class="lg:hidden fixed top-4 left-4 z-50">
+        <button id="mobile-menu-toggle" class="bg-primary-600 text-white p-2 rounded-lg hover:bg-primary-700 transition-all duration-200">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Sidebar - only show when authenticated -->
+    {% if current_user.is_authenticated %}
+    <aside id="sidebar" class="fixed left-0 top-0 w-64 h-screen bg-slate-900 text-white transform -translate-x-full lg:translate-x-0 transition-all duration-300 z-40 sidebar-shadow">
+        <div class="p-6 border-b border-slate-700">
+            <h1 class="text-2xl font-bold bg-gradient-to-r from-primary-400 to-info-400 bg-clip-text text-transparent">Network Monitor</h1>
+            <p class="text-xs text-slate-400 mt-1">Real-time Traffic Analysis</p>
+        </div>
+        
+        <nav class="mt-4 px-3">
+            <a href="{{ url_for('dashboard.index') }}" class="nav-link group flex items-center px-3 py-2.5 mb-1 rounded-lg hover:bg-slate-800 transition-all duration-200 {% if request.endpoint and 'dashboard' in request.endpoint %}bg-primary-600 hover:bg-primary-700{% endif %}">
+                <svg class="w-5 h-5 mr-3 text-slate-400 group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <span class="text-sm font-medium">Dashboard</span>
+            </a>
+            <a href="{{ url_for('monitoring.index') }}" class="nav-link group flex items-center px-3 py-2.5 mb-1 rounded-lg hover:bg-slate-800 transition-all duration-200 {% if request.endpoint and 'monitoring' in request.endpoint %}bg-primary-600 hover:bg-primary-700{% endif %}">
+                <svg class="w-5 h-5 mr-3 text-slate-400 group-hover:text-success-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <span class="text-sm font-medium">Monitoring</span>
+            </a>
+            <a href="{{ url_for('alerts.dashboard') }}" class="nav-link group flex items-center px-3 py-2.5 mb-1 rounded-lg hover:bg-slate-800 transition-all duration-200 {% if request.endpoint and 'alerts' in request.endpoint %}bg-primary-600 hover:bg-primary-700{% endif %}">
+                <svg class="w-5 h-5 mr-3 text-slate-400 group-hover:text-warning-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+                <span class="text-sm font-medium">Alerts</span>
+                {% if active_alert_count > 0 %}
+                <span class="ml-auto bg-danger-500 text-white text-xs px-2 py-0.5 rounded-full pulse-animation">{{ active_alert_count }}</span>
+                {% endif %}
+            </a>
+            <a href="{{ url_for('analysis.dashboard') }}" class="nav-link group flex items-center px-3 py-2.5 mb-1 rounded-lg hover:bg-slate-800 transition-all duration-200 {% if request.endpoint and 'analysis' in request.endpoint %}bg-primary-600 hover:bg-primary-700{% endif %}">
+                <svg class="w-5 h-5 mr-3 text-slate-400 group-hover:text-info-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <span class="text-sm font-medium">Analysis</span>
+            </a>
+            <a href="{{ url_for('reports.dashboard') }}" class="nav-link group flex items-center px-3 py-2.5 mb-1 rounded-lg hover:bg-slate-800 transition-all duration-200 {% if request.endpoint and 'reports' in request.endpoint %}bg-primary-600 hover:bg-primary-700{% endif %}">
+                <svg class="w-5 h-5 mr-3 text-slate-400 group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span class="text-sm font-medium">Reports</span>
+            </a>
+            {% if current_user.role in ['admin', 'super_admin'] %}
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-link group flex items-center px-3 py-2.5 mb-1 rounded-lg hover:bg-slate-800 transition-all duration-200 {% if request.endpoint and 'admin' in request.endpoint %}bg-primary-600 hover:bg-primary-700{% endif %}">
+                <svg class="w-5 h-5 mr-3 text-slate-400 group-hover:text-danger-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span class="text-sm font-medium">Admin</span>
+            </a>
+            {% endif %}
+        </nav>
+        
+        <div class="absolute bottom-0 w-full p-4 border-t border-slate-700 bg-slate-800">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold">
+                    {{ current_user.username[0].upper() }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium truncate">{{ current_user.username }}</div>
+                    <div class="text-xs text-slate-400">{{ current_user.role|title }}</div>
+                </div>
+            </div>
+            <a href="{{ url_for('auth.profile') }}" class="block mt-3 text-center text-sm text-slate-400 hover:text-white transition-colors">Profile</a>
+            <a href="{{ url_for('auth.logout') }}" class="block mt-1 text-center text-sm text-danger-400 hover:text-danger-300 transition-colors">Logout</a>
+        </div>
+    </aside>
+    {% endif %}
+
+    <!-- Main content -->
+    <main class="{% if current_user.is_authenticated %}lg:ml-64{% endif %} min-h-screen transition-all duration-300">
+        <!-- Header -->
+        {% if current_user.is_authenticated %}
+        <header class="bg-white border-b border-gray-200 sticky top-0 z-30 backdrop-blur-sm bg-white/95">
+            {% block header %}
+            <div class="flex items-center justify-between p-4">
+                <div class="flex items-center space-x-3">
+                    <div class="flex items-center space-x-2 text-sm">
+                        <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                        </svg>
+                        <span class="text-gray-600 font-medium">Network Monitor</span>
+                        {% block breadcrumbs %}{% endblock %}
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- Connection Status -->
+                    <div class="flex items-center space-x-2">
+                        <div class="status-dot-pulse"></div>
+                        <span class="text-xs text-gray-600">Connected</span>
+                    </div>
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                        </svg>
+                        <span class="absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full"></span>
+                    </button>
+                </div>
+            </div>
+            {% endblock %}
+        </header>
+        {% endif %}
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="p-4 space-y-3" id="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message flex items-start p-4 rounded-lg border {% if category == 'error' %}bg-danger-50 border-danger-200 text-danger-800{% elif category == 'success' %}bg-success-50 border-success-200 text-success-800{% elif category == 'warning' %}bg-warning-50 border-warning-200 text-warning-800{% else %}bg-info-50 border-info-200 text-info-800{% endif %} animate-slide-in">
+                            <svg class="w-5 h-5 mr-3 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                {% if category == 'error' %}
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                {% elif category == 'success' %}
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                {% else %}
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                                {% endif %}
+                            </svg>
+                            <div class="flex-1">
+                                {{ message }}
+                            </div>
+                            <button onclick="this.parentElement.remove()" class="ml-3 text-gray-400 hover:text-gray-600">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                </svg>
+                            </button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Content -->
+        <div class="p-6">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Modal container -->
+    <div id="modal-container" class="fixed inset-0 z-50 hidden">
+        <div class="modal-backdrop fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300"></div>
+        <div class="modal-content relative z-10 flex items-center justify-center min-h-screen p-4">
+            <!-- Modal content will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Toast notification container -->
+    <div id="notification-container" class="fixed top-4 right-4 z-[9999] space-y-3 max-w-md"></div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/websocket.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+    <script>
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('-translate-x-full');
+        });
+
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(() => {
+            const flashMessages = document.getElementById('flash-messages');
+            if (flashMessages) {
+                flashMessages.querySelectorAll('.flash-message').forEach(msg => {
+                    msg.style.opacity = '0';
+                    msg.style.transform = 'translateY(-10px)';
+                    setTimeout(() => msg.remove(), 300);
+                });
+            }
+        }, 5000);
+
+        // Add smooth scroll behavior
+        document.documentElement.style.scrollBehavior = 'smooth';
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Capture Sessions - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold">Capture Sessions</h2>
+</div>
+
+<div class="bg-white rounded">
+    <table class="w-full">
+        <thead>
+            <tr class="border-b">
+                <th class="text-left p-4">Name</th>
+                <th class="text-left p-4">Interface</th>
+                <th class="text-left p-4">Status</th>
+                <th class="text-left p-4">Started</th>
+                <th class="text-left p-4">Packets</th>
+                <th class="text-left p-4">Size</th>
+                <th class="text-left p-4">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for session in sessions %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-4">{{ session.session_name }}</td>
+                <td class="p-4">{{ session.interface.display_name }}</td>
+                <td class="p-4">
+                    <span class="px-2 py-1 rounded text-xs
+                        {% if session.status == 'running' %}bg-green-100 text-green-800
+                        {% elif session.status == 'paused' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ session.status }}
+                    </span>
+                </td>
+                <td class="p-4">{{ session.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="p-4">{{ '{:,}'.format(session.packet_count) }}</td>
+                <td class="p-4">{{ (session.bytes_captured / 1024 / 1024) | round(2) }} MB</td>
+                <td class="p-4">
+                    <a href="{{ url_for('monitoring.session_detail', id=session.id) }}" 
+                       class="text-blue-600 hover:underline text-sm">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

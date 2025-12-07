@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Baseline Comparison - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold">Baseline Comparison</h2>
+</div>
+
+<div class="bg-white p-6 rounded mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <label class="block text-sm font-medium mb-2">Current Period</label>
+            <select class="w-full px-3 py-2 border rounded">
+                <option>Last 24 Hours</option>
+                <option>Last 7 Days</option>
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-2">Baseline Period</label>
+            <select class="w-full px-3 py-2 border rounded">
+                <option>Previous 24 Hours</option>
+                <option>Previous Week</option>
+            </select>
+        </div>
+    </div>
+    <div class="mt-4">
+        <button class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Compare</button>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Bandwidth</h3>
+        <div class="text-3xl font-bold mb-2">456 Mbps</div>
+        <div class="text-green-600">+12% from baseline</div>
+    </div>
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Packet Rate</h3>
+        <div class="text-3xl font-bold mb-2">3,245 pps</div>
+        <div class="text-red-600">-5% from baseline</div>
+    </div>
+</div>
+{% endblock %}

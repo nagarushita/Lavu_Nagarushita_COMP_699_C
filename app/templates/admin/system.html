@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold">System Settings</h2>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">System Resources</h3>
+        <div class="space-y-4">
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span>CPU Usage</span>
+                    <span>{{ metrics.cpu_percent|round(1) }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded h-2">
+                    <div class="bg-blue-600 h-2 rounded" style="width: {{ metrics.cpu_percent }}%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span>Memory</span>
+                    <span>{{ metrics.memory_percent|round(1) }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded h-2">
+                    <div class="bg-blue-600 h-2 rounded" style="width: {{ metrics.memory_percent }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white p-6 rounded">
+        <h3 class="text-lg font-bold mb-4">Data Retention</h3>
+        <form method="POST" action="{{ url_for('admin.configure_retention') }}">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Retention Period (days)</label>
+                <input type="number" name="days" value="90" min="30" max="730"
+                       class="w-full px-3 py-2 border rounded">
+            </div>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Update Retention
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="bg-white p-6 rounded">
+    <h3 class="text-lg font-bold mb-4">Maintenance</h3>
+    <div class="space-y-2">
+        <button onclick="runCleanup()" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
+            Run Cleanup
+        </button>
+        <button onclick="backupDatabase()" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+            Backup Database
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function runCleanup() {
+        if (confirm('Run database cleanup?')) {
+            fetch('/admin/system/cleanup', {method: 'POST'})
+                .then(r => r.json())
+                .then(data => alert('Cleanup completed'));
+        }
+    }
+    
+    function backupDatabase() {
+        fetch('/admin/system/backup', {method: 'POST'})
+            .then(r => r.json())
+            .then(data => alert('Backup created: ' + data.filename));
+    }
+</script>
+{% endblock %}

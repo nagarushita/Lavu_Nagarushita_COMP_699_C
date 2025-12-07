@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h2 class="text-2xl font-bold">{{ title }}</h2>
+    <div class="flex space-x-2">
+        <select class="px-3 py-2 border border-gray-300 rounded">
+            <option>All Severities</option>
+            <option>Critical</option>
+            <option>High</option>
+            <option>Medium</option>
+            <option>Low</option>
+        </select>
+    </div>
+</div>
+
+<div class="bg-white rounded">
+    <table class="w-full">
+        <thead>
+            <tr class="border-b bg-gray-50">
+                <th class="text-left p-4">Severity</th>
+                <th class="text-left p-4">Rule</th>
+                <th class="text-left p-4">Value</th>
+                <th class="text-left p-4">Time</th>
+                <th class="text-left p-4">Status</th>
+                <th class="text-left p-4">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alerts %}
+            <tr class="border-b hover:bg-gray-50">
+                <td class="p-4">
+                    <span class="px-2 py-1 rounded text-xs font-medium
+                        {% if alert.rule.severity == 'critical' %}bg-red-100 text-red-800
+                        {% elif alert.rule.severity == 'high' %}bg-orange-100 text-orange-800
+                        {% elif alert.rule.severity == 'medium' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-blue-100 text-blue-800{% endif %}">
+                        {{ alert.rule.severity }}
+                    </span>
+                </td>
+                <td class="p-4">{{ alert.rule.name }}</td>
+                <td class="p-4">{{ alert.triggered_value }}</td>
+                <td class="p-4">{{ alert.triggered_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td class="p-4">
+                    <span class="px-2 py-1 rounded text-xs bg-gray-100">{{ alert.status }}</span>
+                </td>
+                <td class="p-4">
+                    <a href="{{ url_for('alerts.detail', id=alert.id) }}" 
+                       class="text-blue-600 hover:underline text-sm">View</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

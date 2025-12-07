@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}HTTP Analysis - Network Monitor{% endblock %}
+
+{% block breadcrumbs %}
+<svg class="w-4 h-4 text-gray-400 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<a href="{{ url_for('analysis.dashboard') }}" class="text-gray-600 hover:text-gray-900">Analysis</a>
+<svg class="w-4 h-4 text-gray-400 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-gray-900 font-medium">HTTP Analysis</span>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-gray-900 mb-2">HTTP Analysis</h2>
+    <p class="text-gray-600">Analyze HTTP traffic patterns, methods, and response codes</p>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="stat-card primary">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Total Requests</p>
+                <p class="text-3xl font-bold text-gray-900">45.2K</p>
+            </div>
+            <div class="p-3 bg-primary-100 rounded-lg">
+                <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Success Rate</p>
+                <p class="text-3xl font-bold text-success-600">98.4%</p>
+            </div>
+            <div class="p-3 bg-success-100 rounded-lg">
+                <svg class="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Avg Response Time</p>
+                <p class="text-3xl font-bold text-gray-900">245ms</p>
+            </div>
+            <div class="p-3 bg-warning-100 rounded-lg">
+                <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card danger">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Errors</p>
+                <p class="text-3xl font-bold text-danger-600">82</p>
+            </div>
+            <div class="p-3 bg-danger-100 rounded-lg">
+                <svg class="w-6 h-6 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">HTTP Methods</h3>
+        <div style="height: 300px;">
+            <canvas id="methods-chart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Response Codes</h3>
+        <div style="height: 300px;">
+            <canvas id="response-codes-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Request Volume Over Time</h3>
+        <div style="height: 300px;">
+            <canvas id="volume-chart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Response Time Distribution</h3>
+        <div style="height: 300px;">
+            <canvas id="response-time-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Tables -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Top Endpoints</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b bg-gray-50">
+                        <th class="text-left p-3 font-semibold text-gray-700">Endpoint</th>
+                        <th class="text-right p-3 font-semibold text-gray-700">Requests</th>
+                        <th class="text-right p-3 font-semibold text-gray-700">Avg Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3 font-mono text-xs">/api/users</td>
+                        <td class="text-right p-3">12,345</td>
+                        <td class="text-right p-3">128ms</td>
+                    </tr>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3 font-mono text-xs">/api/products</td>
+                        <td class="text-right p-3">8,234</td>
+                        <td class="text-right p-3">245ms</td>
+                    </tr>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3 font-mono text-xs">/api/orders</td>
+                        <td class="text-right p-3">5,678</td>
+                        <td class="text-right p-3">312ms</td>
+                    </tr>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3 font-mono text-xs">/api/auth/login</td>
+                        <td class="text-right p-3">4,123</td>
+                        <td class="text-right p-3">89ms</td>
+                    </tr>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3 font-mono text-xs">/api/dashboard</td>
+                        <td class="text-right p-3">3,456</td>
+                        <td class="text-right p-3">156ms</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">User Agents</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b bg-gray-50">
+                        <th class="text-left p-3 font-semibold text-gray-700">Browser/Client</th>
+                        <th class="text-right p-3 font-semibold text-gray-700">Requests</th>
+                        <th class="text-right p-3 font-semibold text-gray-700">%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3">Chrome</td>
+                        <td class="text-right p-3">18,234</td>
+                        <td class="text-right p-3 text-gray-600">40.3%</td>
+                    </tr>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3">Firefox</td>
+                        <td class="text-right p-3">13,456</td>
+                        <td class="text-right p-3 text-gray-600">29.8%</td>
+                    </tr>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3">Safari</td>
+                        <td class="text-right p-3">8,123</td>
+                        <td class="text-right p-3 text-gray-600">18.0%</td>
+                    </tr>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3">Edge</td>
+                        <td class="text-right p-3">3,567</td>
+                        <td class="text-right p-3 text-gray-600">7.9%</td>
+                    </tr>
+                    <tr class="border-b hover:bg-gray-50 transition-colors">
+                        <td class="p-3">Other</td>
+                        <td class="text-right p-3">1,820</td>
+                        <td class="text-right p-3 text-gray-600">4.0%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // HTTP Methods Chart
+    const methodsCtx = document.getElementById('methods-chart').getContext('2d');
+    new Chart(methodsCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+            datasets: [{
+                data: [65, 20, 10, 3, 2],
+                backgroundColor: [
+                    'rgb(59, 130, 246)',
+                    'rgb(16, 185, 129)',
+                    'rgb(251, 146, 60)',
+                    'rgb(239, 68, 68)',
+                    'rgb(168, 85, 247)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+    
+    // Response Codes Chart
+    const codesCtx = document.getElementById('response-codes-chart').getContext('2d');
+    new Chart(codesCtx, {
+        type: 'bar',
+        data: {
+            labels: ['200', '201', '301', '304', '400', '401', '404', '500'],
+            datasets: [{
+                label: 'Requests',
+                data: [38500, 2340, 890, 1200, 340, 120, 580, 42],
+                backgroundColor: [
+                    'rgb(16, 185, 129)',
+                    'rgb(16, 185, 129)',
+                    'rgb(59, 130, 246)',
+                    'rgb(59, 130, 246)',
+                    'rgb(251, 146, 60)',
+                    'rgb(251, 146, 60)',
+                    'rgb(239, 68, 68)',
+                    'rgb(239, 68, 68)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+    
+    // Volume Over Time Chart
+    const volumeCtx = document.getElementById('volume-chart').getContext('2d');
+    const hours = [];
+    const volumeData = [];
+    for (let i = 23; i >= 0; i--) {
+        const date = new Date();
+        date.setHours(date.getHours() - i);
+        hours.push(date.getHours() + ':00');
+        volumeData.push(Math.floor(Math.random() * 2000) + 1000);
+    }
+    
+    new Chart(volumeCtx, {
+        type: 'line',
+        data: {
+            labels: hours,
+            datasets: [{
+                label: 'Requests/hour',
+                data: volumeData,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+    
+    // Response Time Distribution Chart
+    const responseTimeCtx = document.getElementById('response-time-chart').getContext('2d');
+    new Chart(responseTimeCtx, {
+        type: 'bar',
+        data: {
+            labels: ['0-50ms', '50-100ms', '100-200ms', '200-500ms', '500-1000ms', '>1000ms'],
+            datasets: [{
+                label: 'Requests',
+                data: [15200, 18400, 8900, 2100, 350, 50],
+                backgroundColor: 'rgb(16, 185, 129)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endblock %}

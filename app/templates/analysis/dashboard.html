@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis - Network Monitor{% endblock %}
+
+{% block breadcrumbs %}
+<svg class="w-4 h-4 text-gray-400 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-gray-900 font-medium">Protocol Analysis</span>
+{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-gray-900 mb-2">Protocol Analysis</h2>
+    <p class="text-gray-600">Deep dive into network protocol patterns and traffic analysis</p>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="mb-6 border-b border-gray-200">
+    <nav class="flex space-x-6">
+        <a href="{{ url_for('analysis.dns') }}" class="px-4 py-3 border-b-2 border-primary-600 text-primary-600 font-medium transition-colors">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                <span>DNS</span>
+            </div>
+        </a>
+        <a href="{{ url_for('analysis.tcp') }}" class="px-4 py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 font-medium transition-colors">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <span>TCP</span>
+            </div>
+        </a>
+        <a href="{{ url_for('analysis.http') }}" class="px-4 py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 font-medium transition-colors">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path></svg>
+                <span>HTTP</span>
+            </div>
+        </a>
+        <a href="{{ url_for('analysis.baseline') }}" class="px-4 py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 font-medium transition-colors">
+            <div class="flex items-center space-x-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                <span>Baseline</span>
+            </div>
+        </a>
+    </nav>
+</div>
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="stat-card primary">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Total Packets</p>
+                <p class="text-3xl font-bold text-gray-900">1.2M</p>
+                <p class="text-xs text-success-600 mt-1">↑ 12.5% from yesterday</p>
+            </div>
+            <div class="p-3 bg-primary-100 rounded-lg">
+                <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card info">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Time Period</p>
+                <p class="text-3xl font-bold text-gray-900">24h</p>
+                <p class="text-xs text-gray-500 mt-1">Last updated: 2 min ago</p>
+            </div>
+            <div class="p-3 bg-info-100 rounded-lg">
+                <svg class="w-6 h-6 text-info-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Protocols</p>
+                <p class="text-3xl font-bold text-gray-900">12</p>
+                <p class="text-xs text-gray-500 mt-1">TCP, UDP, ICMP, HTTP...</p>
+            </div>
+            <div class="p-3 bg-warning-100 rounded-lg">
+                <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path></svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card danger">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Anomalies</p>
+                <p class="text-3xl font-bold text-danger-600">5</p>
+                <p class="text-xs text-danger-600 mt-1">Requires attention</p>
+            </div>
+            <div class="p-3 bg-danger-100 rounded-lg">
+                <svg class="w-6 h-6 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Protocol Distribution</h3>
+        <div style="height: 300px;">
+            <canvas id="protocol-chart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">Traffic Over Time</h3>
+        <div style="height: 300px;">
+            <canvas id="traffic-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Top Protocols Table -->
+<div class="card">
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Top Protocols by Traffic</h3>
+        <select class="px-3 py-1 border border-gray-300 rounded text-sm">
+            <option>Last 24 Hours</option>
+            <option>Last 7 Days</option>
+            <option>Last 30 Days</option>
+        </select>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b bg-gray-50">
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Protocol</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Packets</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Bytes</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">% of Total</th>
+                    <th class="text-left p-4 text-sm font-semibold text-gray-700">Trend</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="p-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-primary-500 rounded"></div>
+                            <span class="font-medium">TCP</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-gray-600">542,345</td>
+                    <td class="p-4 text-gray-600">1.2 GB</td>
+                    <td class="p-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="progress-bar" style="width: 100px;">
+                                <div class="progress-bar-fill success" style="width: 45%"></div>
+                            </div>
+                            <span class="text-sm text-gray-600">45%</span>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <span class="text-success-600 text-sm">↑ 8.2%</span>
+                    </td>
+                </tr>
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="p-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-success-500 rounded"></div>
+                            <span class="font-medium">UDP</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-gray-600">324,123</td>
+                    <td class="p-4 text-gray-600">756 MB</td>
+                    <td class="p-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="progress-bar" style="width: 100px;">
+                                <div class="progress-bar-fill primary" style="width: 27%"></div>
+                            </div>
+                            <span class="text-sm text-gray-600">27%</span>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <span class="text-success-600 text-sm">↑ 3.5%</span>
+                    </td>
+                </tr>
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="p-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-info-500 rounded"></div>
+                            <span class="font-medium">HTTP</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-gray-600">189,456</td>
+                    <td class="p-4 text-gray-600">432 MB</td>
+                    <td class="p-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="progress-bar" style="width: 100px;">
+                                <div class="progress-bar-fill info" style="width: 16%"></div>
+                            </div>
+                            <span class="text-sm text-gray-600">16%</span>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <span class="text-danger-600 text-sm">↓ 2.1%</span>
+                    </td>
+                </tr>
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="p-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-3 h-3 bg-warning-500 rounded"></div>
+                            <span class="font-medium">HTTPS</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-gray-600">156,789</td>
+                    <td class="p-4 text-gray-600">389 MB</td>
+                    <td class="p-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="progress-bar" style="width: 100px;">
+                                <div class="progress-bar-fill warning" style="width: 12%"></div>
+                            </div>
+                            <span class="text-sm text-gray-600">12%</span>
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <span class="text-success-600 text-sm">↑ 15.3%</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Protocol Distribution Chart
+    const protocolCtx = document.getElementById('protocol-chart').getContext('2d');
+    new Chart(protocolCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['TCP', 'UDP', 'HTTP', 'HTTPS', 'DNS', 'ICMP'],
+            datasets: [{
+                data: [45, 27, 16, 12, 8, 5],
+                backgroundColor: [
+                    'rgb(59, 130, 246)',
+                    'rgb(16, 185, 129)',
+                    'rgb(6, 182, 212)',
+                    'rgb(251, 146, 60)',
+                    'rgb(168, 85, 247)',
+                    'rgb(239, 68, 68)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+    
+    // Traffic Over Time Chart
+    const trafficCtx = document.getElementById('traffic-chart').getContext('2d');
+    const hours = [];
+    const trafficData = [];
+    for (let i = 23; i >= 0; i--) {
+        const date = new Date();
+        date.setHours(date.getHours() - i);
+        hours.push(date.getHours() + ':00');
+        trafficData.push(Math.floor(Math.random() * 50000) + 20000);
+    }
+    
+    new Chart(trafficCtx, {
+        type: 'line',
+        data: {
+            labels: hours,
+            datasets: [{
+                label: 'Packets/sec',
+                data: trafficData,
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endblock %}

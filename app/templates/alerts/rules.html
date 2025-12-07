@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Alert Rules - Network Monitor{% endblock %}
+
+{% block breadcrumbs %}
+<svg class="w-4 h-4 text-gray-400 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+<span class="text-gray-900 font-medium">Alert Rules</span>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Alert Rules</h2>
+            <p class="text-gray-600">Configure automated alerts to monitor your network traffic and security events</p>
+        </div>
+        <a href="{{ url_for('alerts.rule_detail', id=0) }}" 
+           class="inline-flex items-center px-5 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold transition-all duration-200 transform hover:scale-105">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Create New Rule
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="stat-card danger">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Critical Rules</p>
+                <p class="text-2xl font-bold text-gray-900">{{ rules|selectattr('severity', 'equalto', 'critical')|list|length }}</p>
+            </div>
+            <div class="p-3 bg-danger-100 rounded-lg">
+                <svg class="w-6 h-6 text-danger-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card warning">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">High Priority</p>
+                <p class="text-2xl font-bold text-gray-900">{{ rules|selectattr('severity', 'equalto', 'high')|list|length }}</p>
+            </div>
+            <div class="p-3 bg-warning-100 rounded-lg">
+                <svg class="w-6 h-6 text-warning-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card success">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Active Rules</p>
+                <p class="text-2xl font-bold text-gray-900">{{ rules|selectattr('is_active', 'equalto', True)|list|length }}</p>
+            </div>
+            <div class="p-3 bg-success-100 rounded-lg">
+                <svg class="w-6 h-6 text-success-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+    <div class="stat-card primary">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 mb-1">Total Rules</p>
+                <p class="text-2xl font-bold text-gray-900">{{ rules|length }}</p>
+            </div>
+            <div class="p-3 bg-primary-100 rounded-lg">
+                <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Rules Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for rule in rules %}
+    <div class="card group relative overflow-hidden border-l-4 {% if rule.severity == 'critical' %}border-danger-500{% elif rule.severity == 'high' %}border-warning-500{% elif rule.severity == 'medium' %}border-info-500{% else %}border-success-500{% endif %}">
+        <!-- Status Indicator -->
+        <div class="absolute top-4 right-4">
+            <div class="status-dot {% if rule.is_active %}online{% else %}offline{% endif %} transition-all duration-300"></div>
+        </div>
+        
+        <div class="flex items-start mb-4">
+            <div class="p-2 rounded-lg mr-3 {% if rule.severity == 'critical' %}bg-danger-100{% elif rule.severity == 'high' %}bg-warning-100{% elif rule.severity == 'medium' %}bg-info-100{% else %}bg-success-100{% endif %}">
+                <svg class="w-6 h-6 {% if rule.severity == 'critical' %}text-danger-600{% elif rule.severity == 'high' %}text-warning-600{% elif rule.severity == 'medium' %}text-info-600{% else %}text-success-600{% endif %}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                </svg>
+            </div>
+            <div class="flex-1 min-w-0">
+                <h3 class="text-lg font-bold text-gray-900 mb-1 truncate">{{ rule.name }}</h3>
+                <p class="text-xs text-gray-500 uppercase tracking-wide">{{ rule.rule_type|replace('_', ' ') }}</p>
+            </div>
+        </div>
+        
+        <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ rule.description or 'No description provided' }}</p>
+        
+        <div class="space-y-2 mb-4">
+            <div class="flex items-center text-sm">
+                <svg class="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                <span class="text-gray-600">Threshold: <span class="font-semibold text-gray-900">{{ rule.threshold_value }} {{ rule.threshold_unit }}</span></span>
+            </div>
+            <div class="flex items-center">
+                <span class="badge {% if rule.severity == 'critical' %}badge-danger{% elif rule.severity == 'high' %}badge-warning{% elif rule.severity == 'medium' %}badge-info{% else %}badge-success{% endif %} text-xs font-bold uppercase">
+                    {{ rule.severity }}
+                </span>
+                {% if rule.notify_email %}
+                <span class="ml-2 text-xs text-gray-500 flex items-center">
+                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                    Email alerts
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="grid grid-cols-2 gap-2">
+            <a href="{{ url_for('alerts.rule_detail', id=rule.id) }}" 
+               class="text-center px-3 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium transition-all duration-200 transform hover:scale-105">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit
+            </a>
+            <button onclick="toggleRule({{ rule.id }}, this)" 
+                    class="px-3 py-2 {% if rule.is_active %}bg-gray-600 hover:bg-gray-700{% else %}bg-success-600 hover:bg-success-700{% endif %} text-white rounded-lg text-sm font-medium transition-all duration-200 transform hover:scale-105">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                </svg>
+                {% if rule.is_active %}Disable{% else %}Enable{% endif %}
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Empty State -->
+{% if rules|length == 0 %}
+<div class="empty-state mt-12">
+    <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+    </svg>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Alert Rules Yet</h3>
+    <p class="text-gray-600 mb-6">Get started by creating your first alert rule to monitor network activity</p>
+    <a href="{{ url_for('alerts.rule_detail', id=0) }}" 
+       class="inline-flex items-center px-5 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-semibold transition-all duration-200 transform hover:scale-105">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Create Your First Rule
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleRule(ruleId, button) {
+        // Show loading state
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<div class="spinner-sm inline-block mr-2"></div>Processing...';
+        
+        fetch(`/alerts/rules/${ruleId}/toggle`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Alert rule toggled successfully', 'success');
+                setTimeout(() => location.reload(), 500);
+            } else {
+                throw new Error(data.message || 'Failed to toggle rule');
+            }
+        })
+        .catch(error => {
+            showNotification(error.message || 'Failed to toggle alert rule', 'error');
+            button.disabled = false;
+            button.innerHTML = originalText;
+        });
+    }
+
+    // Add fade-in animation to cards
+    document.addEventListener('DOMContentLoaded', () => {
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, index) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            setTimeout(() => {
+                card.style.transition = 'all 0.4s ease';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, index * 50);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+
+{% block title %}Live Monitoring - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold">{{ interface.display_name }}</h2>
+        <p class="text-gray-600">Live Monitoring</p>
+    </div>
+    <div class="flex space-x-2">
+        <button id="pause-btn" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">Pause</button>
+        <button id="stop-btn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Stop</button>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div class="bg-white p-6 rounded border border-gray-200">
+        <div class="text-sm text-gray-600 mb-2">Packets/sec</div>
+        <div class="text-3xl font-bold text-blue-600" id="packets-sec">0</div>
+    </div>
+    <div class="bg-white p-6 rounded border border-gray-200">
+        <div class="text-sm text-gray-600 mb-2">Bandwidth</div>
+        <div class="text-3xl font-bold text-green-600" id="bandwidth">0 Mbps</div>
+    </div>
+    <div class="bg-white p-6 rounded border border-gray-200">
+        <div class="text-sm text-gray-600 mb-2">Connections</div>
+        <div class="text-3xl font-bold text-purple-600" id="connections">0</div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <div class="bg-white p-6 rounded border border-gray-200">
+        <h3 class="text-lg font-bold mb-4">Bandwidth Over Time</h3>
+        <div style="height: 250px;">
+            <canvas id="bandwidth-chart"></canvas>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded border border-gray-200">
+        <h3 class="text-lg font-bold mb-4">Protocol Distribution</h3>
+        <div style="height: 250px;">
+            <canvas id="protocol-chart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="bg-white p-6 rounded border border-gray-200">
+    <h3 class="text-lg font-bold mb-4">Live Packets</h3>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left p-2">Time</th>
+                    <th class="text-left p-2">Source</th>
+                    <th class="text-left p-2">Destination</th>
+                    <th class="text-left p-2">Protocol</th>
+                    <th class="text-left p-2">Length</th>
+                </tr>
+            </thead>
+            <tbody id="packet-table">
+                <tr>
+                    <td colspan="5" class="p-4 text-center text-gray-500">Waiting for packets...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    let sessionId = null;
+    let socket = null;
+    let bandwidthChart = null;
+    let protocolChart = null;
+    let updateInterval = null;
+    const interfaceId = {{ interface.id }};
+    
+    // Initialize charts
+    const bandwidthCtx = document.getElementById('bandwidth-chart').getContext('2d');
+    bandwidthChart = new Chart(bandwidthCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Bandwidth (Mbps)',
+                data: [],
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+    
+    const protocolCtx = document.getElementById('protocol-chart').getContext('2d');
+    protocolChart = new Chart(protocolCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+    
+    function startCapture() {
+        fetch('/monitoring/capture/start', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                interface_id: interfaceId,
+                session_name: 'Live Monitoring - {{ interface.display_name }}'
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                sessionId = data.session_id;
+                console.log('Capture started, session ID:', sessionId);
+                connectWebSocket();
+                // Wait a moment for initial packets to be generated
+                setTimeout(startUpdating, 1500);
+            } else {
+                alert('Failed to start capture: ' + data.message);
+            }
+        })
+        .catch(err => {
+            console.error('Error starting capture:', err);
+            alert('Error starting capture. Please try again.');
+        });
+    }
+    
+    function connectWebSocket() {
+        socket = io();
+        socket.on('packet_update', function(data) {
+            if (data.session_id === sessionId) {
+                fetchLiveStats();
+            }
+        });
+    }
+    
+    function startUpdating() {
+        fetchLiveStats();
+        updateInterval = setInterval(fetchLiveStats, 2000); // Update every 2 seconds
+    }
+    
+    function fetchLiveStats() {
+        if (!sessionId) return;
+        
+        // Fetch live stats
+        fetch(`/monitoring/interfaces/${interfaceId}/stats`)
+            .then(r => r.json())
+            .then(stats => {
+                updateStats(stats);
+            })
+            .catch(err => console.error('Error fetching interface stats:', err));
+        
+        // Fetch recent packets
+        fetch(`/monitoring/capture/${sessionId}/packets?limit=10`)
+            .then(r => r.json())
+            .then(packets => {
+                updatePacketTable(packets);
+            })
+            .catch(err => console.error('Error fetching packets:', err));
+        
+        // Fetch live stats with protocol distribution
+        fetch(`/monitoring/live/${interfaceId}/stats`)
+            .then(r => r.json())
+            .then(data => {
+                updateCharts(data);
+            })
+            .catch(err => console.error('Error fetching live stats:', err));
+    }
+            .then(data => {
+                updateCharts(data);
+            });
+    }
+    
+    function updateStats(stats) {
+        document.getElementById('packets-sec').textContent = stats.packet_rate || 0;
+        document.getElementById('bandwidth').textContent = (stats.bandwidth_mbps || 0).toFixed(1) + ' Mbps';
+        document.getElementById('connections').textContent = stats.connections || 0;
+    }
+    
+    function updateCharts(data) {
+        // Update bandwidth chart
+        const now = new Date().toLocaleTimeString();
+        if (bandwidthChart.data.labels.length > 30) {
+            bandwidthChart.data.labels.shift();
+            bandwidthChart.data.datasets[0].data.shift();
+        }
+        bandwidthChart.data.labels.push(now);
+        bandwidthChart.data.datasets[0].data.push(data.bandwidth_mbps || 0);
+        bandwidthChart.update('none');
+        
+        // Update protocol chart
+        if (data.protocol_distribution) {
+            const protocols = Object.keys(data.protocol_distribution);
+            const counts = Object.values(data.protocol_distribution);
+            if (protocols.length > 0) {
+                protocolChart.data.labels = protocols;
+                protocolChart.data.datasets[0].data = counts;
+                protocolChart.update();
+            }
+        }
+    }
+    
+    function updatePacketTable(packets) {
+        const tbody = document.getElementById('packet-table');
+        tbody.innerHTML = '';
+        
+        packets.forEach(packet => {
+            const row = document.createElement('tr');
+            row.className = 'border-b hover:bg-gray-50';
+            row.innerHTML = `
+                <td class="p-2">${new Date(packet.timestamp).toLocaleTimeString()}</td>
+                <td class="p-2">${packet.source_ip}:${packet.source_port || ''}</td>
+                <td class="p-2">${packet.destination_ip}:${packet.destination_port || ''}</td>
+                <td class="p-2"><span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">${packet.protocol}</span></td>
+                <td class="p-2">${packet.length} bytes</td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+    
+    // Pause button
+    document.getElementById('pause-btn').addEventListener('click', function() {
+        if (!sessionId) return;
+        
+        fetch(`/monitoring/capture/${sessionId}/pause`, {
+            method: 'POST'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                clearInterval(updateInterval);
+                this.textContent = 'Resume';
+                this.className = 'px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700';
+                this.onclick = function() { resumeCapture(); };
+            }
+        });
+    });
+    
+    function resumeCapture() {
+        fetch(`/monitoring/capture/${sessionId}/resume`, {
+            method: 'POST'
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                startUpdating();
+                const btn = document.getElementById('pause-btn');
+                btn.textContent = 'Pause';
+                btn.className = 'px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700';
+                btn.onclick = null;
+            }
+        });
+    }
+    
+    // Stop button
+    document.getElementById('stop-btn').addEventListener('click', function() {
+        if (!sessionId) return;
+        
+        if (confirm('Are you sure you want to stop monitoring?')) {
+            fetch(`/monitoring/capture/${sessionId}/stop`, {
+                method: 'POST'
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    clearInterval(updateInterval);
+                    if (socket) socket.disconnect();
+                    alert('Monitoring stopped. Redirecting to sessions...');
+                    window.location.href = '/monitoring/capture/sessions';
+                }
+            });
+        }
+    });
+    
+    // Start capture when page loads
+    startCapture();
+</script>
+{% endblock %}
