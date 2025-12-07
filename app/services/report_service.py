@@ -73,6 +73,7 @@ class ReportService:
         content.append(Paragraph('<b>Traffic Summary</b>', styles['Heading2']))
         content.append(Spacer(1, 0.2*inch))
         
+        # Sample data
         data = [
             ['Metric', 'Value'],
             ['Total Packets', '1,234,567'],

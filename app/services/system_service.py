@@ -44,6 +44,7 @@ class SystemService:
         """Configure data retention period"""
         if days < 30 or days > 730:
             return {'success': False, 'message': 'Retention must be between 30 and 730 days'}
+        
         return {'success': True, 'retention_days': days}
     
     def run_cleanup(self):
@@ -101,6 +102,29 @@ class SystemService:
         """Restore database from backup"""
         if not backup_file:
             return {'success': False, 'message': 'No backup file provided'}
+        
+        import shutil
+        import tarfile
+        
+        try:
+            with tarfile.open(backup_file, 'r:gz') as tar:
+                tar.extractall(path='temp_restore')
+            
+            db_path = 'instance/network_monitor.db'
+            restored_db = 'temp_restore/backup.db'
+            
+            if os.path.exists(restored_db):
+                shutil.copy2(restored_db, db_path)
+                shutil.rmtree('temp_restore')
+                
+                return {
+                    'success': True,
+                    'message': 'Database restored successfully',
+                    'timestamp': datetime.utcnow().isoformat()
+                }
+        except Exception as e:
+            return {'success': False, 'message': f'Restore failed: {str(e)}'}
+        
         return {
             'success': True,
             'message': 'Database restore initiated',

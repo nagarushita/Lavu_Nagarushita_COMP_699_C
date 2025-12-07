@@ -20,7 +20,6 @@ class DashboardService:
         db.session.add(dashboard)
         db.session.commit()
         
-        # Add default widgets if no layout specified
         if layout == '{"columns": 3, "rowHeight": 100}':
             self._add_default_widgets(dashboard.id)
         
@@ -160,7 +159,6 @@ class DashboardService:
         
         for i in range(points):
             timestamp = datetime.utcnow() - timedelta(hours=points-i)
-            # Add some variance around actual usage
             value = base_bandwidth * random.uniform(0.7, 1.3)
             data.append({
                 'timestamp': timestamp.isoformat(),
@@ -182,7 +180,6 @@ class DashboardService:
         
         for i in range(points):
             timestamp = datetime.utcnow() - timedelta(minutes=points-i)
-            # Add variance around actual rate
             value = int(base_rate * random.uniform(0.8, 1.2))
             data.append({
                 'timestamp': timestamp.isoformat(),
@@ -241,6 +238,8 @@ class DashboardService:
     
     def _get_geographic_data(self):
         """Get geographic distribution data"""
+        # Geographic data would require GeoIP lookup - return placeholder for now
+        # This should be populated by actual GeoIP analysis service
         return {
             'Unknown': 0
         }
