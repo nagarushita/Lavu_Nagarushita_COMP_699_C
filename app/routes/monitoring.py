@@ -1,25 +1,51 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required, current_user
 from app import db
 from app.models.network_interface import NetworkInterface
 from app.models.capture_session import CaptureSession
 from app.services.capture_service import CaptureService, InterfaceManager
+from app.services.interface_discovery import InterfaceDiscoveryService
 
 monitoring_bp = Blueprint('monitoring', __name__, url_prefix='/monitoring')
 capture_service = CaptureService()
 interface_manager = InterfaceManager()
+interface_discovery = InterfaceDiscoveryService()
 
 @monitoring_bp.route('/')
 @login_required
 def index():
     interfaces = NetworkInterface.query.all()
-    return render_template('monitoring/interfaces.html', interfaces=interfaces)
+    # Get real stats for each interface
+    interface_stats = {}
+    for iface in interfaces:
+        stats = interface_manager.get_interface_stats(iface.id)
+        interface_stats[iface.id] = stats if stats else {
+            'bandwidth_mbps': 0,
+            'bandwidth_percent': 0,
+            'packet_rate': 0,
+            'connections': 0
+        }
+    return render_template('monitoring/interfaces.html', 
+                         interfaces=interfaces, 
+                         interface_stats=interface_stats)
 
 @monitoring_bp.route('/interfaces')
 @login_required
 def interfaces():
     interfaces = NetworkInterface.query.all()
-    return render_template('monitoring/interfaces.html', interfaces=interfaces)
+    # Get real stats for each interface
+    interface_stats = {}
+    for iface in interfaces:
+        stats = interface_manager.get_interface_stats(iface.id)
+        interface_stats[iface.id] = stats if stats else {
+            'bandwidth_mbps': 0,
+            'bandwidth_percent': 0,
+            'packet_rate': 0,
+            'connections': 0
+        }
+    return render_template('monitoring/interfaces.html', 
+                         interfaces=interfaces, 
+                         interface_stats=interface_stats)
 
 @monitoring_bp.route('/interfaces/<int:id>')
 @login_required
@@ -62,6 +88,31 @@ def disable_interface(id):
 def interface_stats(id):
     stats = interface_manager.get_interface_stats(id)
     return jsonify(stats)
+
+@monitoring_bp.route('/interfaces/discover', methods=['POST'])
+@login_required
+def discover_interfaces():
+    """Discover and sync network interfaces from the system"""
+    try:
+        result = interface_discovery.sync_interfaces_to_db()
+        flash(f"Interface discovery complete: {result['added']} added, {result['updated']} updated, {result['deactivated']} deactivated", 'success')
+        return jsonify({'success': True, **result})
+    except Exception as e:
+        print(f"Error discovering interfaces: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@monitoring_bp.route('/interfaces/refresh', methods=['GET'])
+@login_required
+def refresh_interfaces():
+    """Page redirect after discovering interfaces"""
+    try:
+        result = interface_discovery.sync_interfaces_to_db()
+        flash(f"Discovered {result['total']} interfaces: {result['added']} new, {result['updated']} updated", 'success')
+    except Exception as e:
+        flash(f"Error discovering interfaces: {str(e)}", 'danger')
+    return redirect(url_for('monitoring.interfaces'))
 
 @monitoring_bp.route('/live/<int:interface_id>')
 @login_required

@@ -62,6 +62,18 @@ class InterfaceManager:
             Packet.timestamp >= datetime.utcnow() - timedelta(minutes=5)
         ).scalar() or 0
         
+        # If no active monitoring, try to get live system stats
+        if packet_rate == 0 and total_bandwidth == 0:
+            try:
+                from app.services.interface_discovery import InterfaceDiscoveryService
+                live_stats = InterfaceDiscoveryService.get_interface_live_stats(interface.name)
+                if live_stats:
+                    # These are cumulative stats, not rates, so we show 0 for now
+                    # In a real implementation, you'd store previous values and calculate deltas
+                    pass
+            except:
+                pass
+        
         return {
             'id': interface.id,
             'name': interface.display_name,
@@ -127,8 +139,8 @@ class CaptureService:
         if not interface:
             return {'success': False, 'message': 'Interface not found'}
         
-        if not interface.is_active:
-            return {'success': False, 'message': 'Interface is not active'}
+        # Allow monitoring even if interface appears inactive (might be virtual or system dependent)
+        # Real packet capture will fail gracefully if interface is truly unavailable
         
         # Check session limit
         active_count = CaptureSession.query.filter_by(status='running').count()
@@ -312,7 +324,13 @@ class CaptureService:
         
         print(f"Capture thread started for session {session_id}")
         
+        alert_check_counter = 0
+        
         with app.app_context():
+            # Import alert engine for periodic evaluation
+            from app.services.alert_service import AlertEngine
+            alert_engine = AlertEngine()
+            
             while True:
                 try:
                     session = CaptureSession.query.get(session_id)
@@ -344,6 +362,44 @@ class CaptureService:
                     
                     db.session.commit()
                     print(f"Session {session_id}: Generated {packet_count} packets, total: {session.packet_count}")
+                    
+                    # Check alerts every 30 seconds (30 iterations)
+                    alert_check_counter += 1
+                    if alert_check_counter >= 30:
+                        alert_check_counter = 0
+                        
+                        # Calculate current metrics
+                        duration = (datetime.utcnow() - session.start_time).total_seconds()
+                        if duration > 0:
+                            bandwidth_mbps = (session.bytes_captured * 8) / duration / 1000000
+                            packet_rate = session.packet_count / duration
+                            
+                            # Get unique connections in last 5 minutes
+                            from sqlalchemy import func
+                            connections = db.session.query(
+                                func.count(func.distinct(Packet.source_ip))
+                            ).filter(
+                                Packet.session_id == session_id,
+                                Packet.timestamp >= datetime.utcnow() - timedelta(minutes=5)
+                            ).scalar() or 0
+                            
+                            metrics = {
+                                'bandwidth': bandwidth_mbps,
+                                'packet_rate': packet_rate,
+                                'connection': connections,
+                            }
+                            
+                            print(f"Session {session_id}: Evaluating alerts - Bandwidth: {bandwidth_mbps:.2f} Mbps, Packet Rate: {packet_rate:.0f} pps, Connections: {connections}")
+                            
+                            # Evaluate alert rules
+                            try:
+                                triggered_alerts = alert_engine.evaluate_rules(metrics)
+                                if triggered_alerts:
+                                    print(f"⚠️  {len(triggered_alerts)} alert(s) triggered!")
+                                    for alert in triggered_alerts:
+                                        print(f"   - {alert.rule.name}: {alert.triggered_value}")
+                            except Exception as e:
+                                print(f"Error evaluating alerts: {e}")
                     
                     # Emit stats via websocket
                     socketio.emit('packet_update', {

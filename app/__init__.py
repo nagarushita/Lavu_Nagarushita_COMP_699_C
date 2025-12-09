@@ -98,6 +98,7 @@ def initialize_default_data():
     from app.models.capture_session import CaptureSession
     from app.models.packet import Packet
     from app.models.audit_log import AuditLog
+    from app.services.interface_discovery import InterfaceDiscoveryService
     from datetime import datetime, timedelta
     import random
     
@@ -121,23 +122,25 @@ def initialize_default_data():
             db.session.add(user)
         db.session.flush()
     
-    # Create default network interfaces if not exist
+    # Discover and create network interfaces from system
     if NetworkInterface.query.count() == 0:
-        interfaces = [
-            NetworkInterface(name='eth0', display_name='Ethernet 0', ip_address='192.168.1.10', 
-                           mac_address='00:1A:2B:3C:4D:5E', is_active=True, is_monitoring=True, bandwidth_limit_mbps=1000),
-            NetworkInterface(name='eth1', display_name='Ethernet 1', ip_address='10.0.0.10', 
-                           mac_address='00:1A:2B:3C:4D:5F', is_active=True, is_monitoring=False, bandwidth_limit_mbps=1000),
-            NetworkInterface(name='wlan0', display_name='Wireless 0', ip_address='192.168.1.20', 
-                           mac_address='00:1A:2B:3C:4D:60', is_active=True, is_monitoring=True, bandwidth_limit_mbps=100),
-            NetworkInterface(name='docker0', display_name='Docker Bridge', ip_address='172.17.0.1', 
-                           mac_address='02:42:AC:11:00:00', is_active=True, is_monitoring=False, bandwidth_limit_mbps=10000),
-            NetworkInterface(name='lo', display_name='Loopback', ip_address='127.0.0.1', 
-                           mac_address='00:00:00:00:00:00', is_active=True, is_monitoring=False, bandwidth_limit_mbps=None)
-        ]
-        for iface in interfaces:
-            db.session.add(iface)
-        db.session.flush()
+        try:
+            print("Discovering network interfaces from system...")
+            result = InterfaceDiscoveryService.sync_interfaces_to_db()
+            print(f"Discovered {result['total']} interfaces: {result['added']} added")
+        except Exception as e:
+            print(f"Error discovering interfaces: {e}")
+            # Fallback to dummy interfaces if discovery fails
+            interfaces = [
+                NetworkInterface(name='eth0', display_name='Ethernet 0', ip_address='192.168.1.10', 
+                               mac_address='00:1A:2B:3C:4D:5E', is_active=True, is_monitoring=False, bandwidth_limit_mbps=1000),
+                NetworkInterface(name='lo', display_name='Loopback', ip_address='127.0.0.1', 
+                               mac_address='00:00:00:00:00:00', is_active=True, is_monitoring=False, bandwidth_limit_mbps=None)
+            ]
+            for iface in interfaces:
+                db.session.add(iface)
+            db.session.flush()
+            print("Added fallback dummy interfaces")
     
     # Create alert rules
     if AlertRule.query.count() == 0:

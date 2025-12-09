@@ -10,8 +10,19 @@
 {% block content %}
 <!-- Page Header -->
 <div class="mb-8">
-    <h2 class="text-3xl font-bold text-gray-900 mb-2">Network Interfaces</h2>
-    <p class="text-gray-600">Monitor and manage your network interfaces with real-time traffic statistics</p>
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Network Interfaces</h2>
+            <p class="text-gray-600">Monitor and manage your network interfaces with real-time traffic statistics</p>
+        </div>
+        <a href="{{ url_for('monitoring.refresh_interfaces') }}" 
+           class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+            </svg>
+            Refresh Interfaces
+        </a>
+    </div>
 </div>
 
 <!-- Quick Stats -->
@@ -74,8 +85,10 @@
 <!-- Interfaces Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for interface in interfaces %}
-    {% set bandwidth_pct = (50 + (loop.index * 7)) % 100 %}
-    {% set bandwidth_used = ((interface.bandwidth_limit_mbps or 0) * bandwidth_pct / 100) | round(1) if interface.bandwidth_limit_mbps else 0 %}
+    {% set stats = interface_stats.get(interface.id, {}) %}
+    {% set bandwidth_mbps = stats.bandwidth_mbps or 0 %}
+    {% set bandwidth_pct = stats.bandwidth_percent or 0 %}
+    {% set packet_rate = stats.packet_rate or 0 %}
     <div class="card group relative overflow-hidden {% if interface.is_monitoring %}border-l-4 border-success-500{% endif %}">
         <!-- Status Indicator -->
         <div class="absolute top-4 right-4 flex items-center space-x-2">
@@ -119,10 +132,12 @@
             <div class="flex justify-between text-xs mb-2">
                 <span class="text-gray-600 font-medium">Bandwidth Usage</span>
                 <span class="font-semibold {% if bandwidth_pct > 80 %}text-danger-600{% elif bandwidth_pct > 60 %}text-warning-600{% else %}text-success-600{% endif %}">
-                    {% if interface.bandwidth_limit_mbps %}
-                    {{ bandwidth_used }} / {{ interface.bandwidth_limit_mbps }} Mbps
+                    {% if bandwidth_mbps > 0 and interface.bandwidth_limit_mbps %}
+                    {{ bandwidth_mbps }} / {{ interface.bandwidth_limit_mbps }} Mbps
+                    {% elif interface.bandwidth_limit_mbps %}
+                    0 / {{ interface.bandwidth_limit_mbps }} Mbps
                     {% else %}
-                    No Limit
+                    {% if bandwidth_mbps > 0 %}{{ bandwidth_mbps }} Mbps{% else %}Idle{% endif %}
                     {% endif %}
                 </span>
             </div>
@@ -138,7 +153,9 @@
                 </svg>
                 <span class="text-gray-600">Packet Rate</span>
             </div>
-            <span class="font-bold text-gray-900">{{ (500 + (loop.index * 123)) }} pps</span>
+            <span class="font-bold {% if packet_rate > 0 %}text-gray-900{% else %}text-gray-400{% endif %}">
+                {% if packet_rate > 0 %}{{ packet_rate }} pps{% else %}0 pps{% endif %}
+            </span>
         </div>
         
         <div class="grid grid-cols-2 gap-2">

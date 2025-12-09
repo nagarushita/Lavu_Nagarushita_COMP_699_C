@@ -26,12 +26,14 @@ class AlertEngine:
         threshold = rule.threshold_value
         condition = rule.condition
         
-        if condition == 'greater_than':
+        if condition in ['greater_than', 'exceeds']:
             return metric_value > threshold
         elif condition == 'less_than':
             return metric_value < threshold
         elif condition == 'equals':
             return metric_value == threshold
+        elif condition == 'detected':
+            return metric_value > 0
         
         return False
     

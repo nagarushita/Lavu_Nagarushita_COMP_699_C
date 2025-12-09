@@ -118,6 +118,13 @@
     });
     
     function startCapture() {
+        console.log('Starting capture for interface:', interfaceId);
+        
+        // Show loading state
+        document.getElementById('packets-sec').textContent = 'Starting...';
+        document.getElementById('bandwidth').textContent = 'Starting...';
+        document.getElementById('connections').textContent = 'Starting...';
+        
         fetch('/monitoring/capture/start', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -126,21 +133,65 @@
                 session_name: 'Live Monitoring - {{ interface.display_name }}'
             })
         })
-        .then(r => r.json())
+        .then(r => {
+            console.log('Capture start response status:', r.status);
+            return r.json();
+        })
         .then(data => {
+            console.log('Capture start response:', data);
             if (data.success) {
                 sessionId = data.session_id;
-                console.log('Capture started, session ID:', sessionId);
+                console.log('✓ Capture started successfully, session ID:', sessionId);
+                
+                // Reset loading state
+                document.getElementById('packets-sec').textContent = '0';
+                document.getElementById('bandwidth').textContent = '0 Mbps';
+                document.getElementById('connections').textContent = '0';
+                
                 connectWebSocket();
                 // Wait a moment for initial packets to be generated
-                setTimeout(startUpdating, 1500);
+                setTimeout(() => {
+                    console.log('Starting periodic updates...');
+                    startUpdating();
+                }, 1500);
             } else {
-                alert('Failed to start capture: ' + data.message);
+                console.error('Capture failed:', data.message);
+                
+                // Show user-friendly error message
+                let errorMsg = data.message;
+                if (errorMsg.includes('not active')) {
+                    errorMsg = 'This interface appears to be offline or unavailable. Monitoring will proceed with simulated data for demonstration purposes.';
+                }
+                
+                // Display error but allow page to show with zeros
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'bg-warning-100 border-l-4 border-warning-600 text-warning-800 p-4 mb-4 rounded';
+                errorDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <div>
+                            <p class="font-bold">Monitoring Limited</p>
+                            <p class="text-sm">${errorMsg}</p>
+                        </div>
+                    </div>
+                `;
+                document.querySelector('.mb-6').insertAdjacentElement('afterend', errorDiv);
+                
+                // Reset to zeros
+                document.getElementById('packets-sec').textContent = '0';
+                document.getElementById('bandwidth').textContent = '0 Mbps';
+                document.getElementById('connections').textContent = '0';
             }
         })
         .catch(err => {
             console.error('Error starting capture:', err);
-            alert('Error starting capture. Please try again.');
+            alert('Error starting capture. Please check the console for details.');
+            // Reset to zeros on error
+            document.getElementById('packets-sec').textContent = '0';
+            document.getElementById('bandwidth').textContent = '0 Mbps';
+            document.getElementById('connections').textContent = '0';
         });
     }
     
@@ -159,12 +210,18 @@
     }
     
     function fetchLiveStats() {
-        if (!sessionId) return;
+        if (!sessionId) {
+            console.log('No session ID, cannot fetch stats');
+            return;
+        }
         
-        // Fetch live stats
+        console.log('Fetching stats for session:', sessionId, 'interface:', interfaceId);
+        
+        // Fetch interface stats
         fetch(`/monitoring/interfaces/${interfaceId}/stats`)
             .then(r => r.json())
             .then(stats => {
+                console.log('Interface stats:', stats);
                 updateStats(stats);
             })
             .catch(err => console.error('Error fetching interface stats:', err));
@@ -173,6 +230,7 @@
         fetch(`/monitoring/capture/${sessionId}/packets?limit=10`)
             .then(r => r.json())
             .then(packets => {
+                console.log('Packets received:', packets.length);
                 updatePacketTable(packets);
             })
             .catch(err => console.error('Error fetching packets:', err));
@@ -181,16 +239,17 @@
         fetch(`/monitoring/live/${interfaceId}/stats`)
             .then(r => r.json())
             .then(data => {
+                console.log('Live stats:', data);
                 updateCharts(data);
             })
             .catch(err => console.error('Error fetching live stats:', err));
     }
-            .then(data => {
-                updateCharts(data);
-            });
-    }
     
     function updateStats(stats) {
+        if (!stats) {
+            console.warn('No stats provided');
+            return;
+        }
         document.getElementById('packets-sec').textContent = stats.packet_rate || 0;
         document.getElementById('bandwidth').textContent = (stats.bandwidth_mbps || 0).toFixed(1) + ' Mbps';
         document.getElementById('connections').textContent = stats.connections || 0;
@@ -221,6 +280,12 @@
     
     function updatePacketTable(packets) {
         const tbody = document.getElementById('packet-table');
+        
+        if (!packets || packets.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Waiting for packets...</td></tr>';
+            return;
+        }
+        
         tbody.innerHTML = '';
         
         packets.forEach(packet => {
